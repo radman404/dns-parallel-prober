@@ -46,22 +46,17 @@ class Prober(threading.Thread):
         # this simulates how long the DNS query will take; substitute with the
         # actual DNS query command
 
-        ###
-        # remove from here
-        #
-        # using a normal distribution to simulate real work
-        #_will_take = abs(random.gauss(0, 1) * 5)
-        #time.sleep(_will_take)
-        #
-        # to here
-        ###
+        #nss = []
+        #for i in self.dns_server.rrset:
+        #    nss.append(i)
+        #ns = str(nss[random.randint(0, len(nss))])[:-1]
         resolve.nameservers = [item.address for item in resolve.query(self.dns_server)]
         try:
             answer = resolve.query(self.target)
             for data in answer:
-                print ('{} | {}'.format(self.target, data))
-        except Exception as e:
-            a = e
+                print ('{}: {} | {}'.format(self.dns_server, self.target, data))
+        except:
+            pass
         # then append the result to some form of storage
         #res.append("{} done in {}s".format(self.target, _will_take))
 
@@ -80,10 +75,14 @@ def subdomain_fromlist(the_list):
             yield line.replace('\n', '')
 
 
-def fill(d, amount, dom, sub, ns):
+def fill(d, amount, dom, sub, nms):
     for i in range(amount):
         # calls next() on the generator to get the next iteration (or next subdomain)
-        t = Prober(ns, '{}.{}'.format(sub.next(), dom))
+        #for p in nsvrs:
+            #print (str(p))
+        #print (type(nsvrs))
+        ns = random.choice(nms)
+        t = Prober(str(ns), '{}.{}'.format(sub.next(), dom))
         t.start()
         d.append(t)
 
@@ -113,9 +112,13 @@ def main(dom, max_running_threads, outfile, overwrite, infile, nsvrs):
     try:
 
         # fill the queue ip to max for now
-    #    nsvrs = dns.resolver.query(dom, 'NS')
-        ns = str(nsvrs[random.randint(0, len(nsvrs)-1)])[:-1]
-        fill(d, max_running_threads, dom, sub, ns)
+        nms = []
+        nsvrs = dns.resolver.query(dom, 'NS')
+        for ns in nsvrs.rrset:
+            print (ns)
+            nms.append(str(ns)[:-1])
+        #ns = str(random.choice(nsvrs))[:-1]
+        fill(d, max_running_threads, dom, sub, nms)
         print("Press CTRL-C to gracefully stop")
         running = True
     except StopIteration:
@@ -144,7 +147,7 @@ def main(dom, max_running_threads, outfile, overwrite, infile, nsvrs):
                 sleep_time += (sleep_time * INCREASE_PERCENT)
                # print('.', end="")
 
-            fill(d, delta, dom, sub, ns)
+            fill(d, delta, dom, sub, nms)
             previous_len = len(d)
 
         except KeyboardInterrupt:
