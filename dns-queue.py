@@ -54,7 +54,7 @@ class Prober(threading.Thread):
         try:
             answer = resolve.query(self.target)
             for data in answer:
-                print ('{}: {} | {}'.format(self.dns_server, self.target, data))
+                print ('{} | {}'.format(self.target, data))
         except:
             pass
         # then append the result to some form of storage
@@ -115,7 +115,7 @@ def main(dom, max_running_threads, outfile, overwrite, infile, nsvrs):
         nms = []
         nsvrs = dns.resolver.query(dom, 'NS')
         for ns in nsvrs.rrset:
-            print (ns)
+           #print (ns)
             nms.append(str(ns)[:-1])
         #ns = str(random.choice(nsvrs))[:-1]
         fill(d, max_running_threads, dom, sub, nms)
